@@ -1,57 +1,92 @@
 
-# MINI-DOOM v0.2.1
-# IDLE-compatible version
+# MINI-DOOM v0.2.2
+# 3x3 Coordinate Renderer
+# Python IDLE compatible
 
-WORLD = [
-    "#######",
-    "#.....#",
-    "#..#..#",
-    "#.....#",
-    "#.#...#",
-    "#.....#",
-    "#######"
-]
+# NORTH-facing screen lookup table
+SCREEN_TABLE = {
+    (1, 1): "181",
+    (2, 1): "181",
+    (3, 1): "181",
 
+    (1, 2): "180",
+    (2, 2): "080",
+    (3, 2): "081",
+
+    (1, 3): "180",
+    (2, 3): "080",
+    (3, 3): "081"
+}
+
+# Player starting position
 X = 2
-Y = 3
+Y = 2
+
+# 0 = NORTH
+# 1 = EAST
+# 2 = SOUTH
+# 3 = WEST
 ROTATION = 0
 
 DIRECTIONS = [
-    (0, -1),
-    (1, 0),
-    (0, 1),
-    (-1, 0)
+    (0, -1),  # NORTH
+    (1, 0),   # EAST
+    (0, 1),   # SOUTH
+    (-1, 0)   # WEST
 ]
 
-def is_wall(x, y):
-    if y < 0 or y >= len(WORLD):
-        return True
+DIRECTION_NAMES = [
+    "NORTH",
+    "EAST",
+    "SOUTH",
+    "WEST"
+]
 
-    if x < 0 or x >= len(WORLD[y]):
-        return True
+ARROWS = ["^", ">", "v", "<"]
 
-    return WORLD[y][x] == "#"
+
+def get_screen_code():
+    # Rotate the lookup table based on facing direction
+
+    if ROTATION == 0:
+        tx, ty = X, Y
+
+    elif ROTATION == 1:
+        tx, ty = Y, 4 - X
+
+    elif ROTATION == 2:
+        tx, ty = 4 - X, 4 - Y
+
+    else:
+        tx, ty = 4 - Y, X
+
+    return SCREEN_TABLE[(tx, ty)]
 
 
 def render():
-    left_rotation = (ROTATION - 1) % 4
-    right_rotation = (ROTATION + 1) % 4
+    print("\n" * 2)
+    print("========================")
+    print("       MINI-DOOM")
+    print("========================")
 
-    left_dx, left_dy = DIRECTIONS[left_rotation]
-    right_dx, right_dy = DIRECTIONS[right_rotation]
-
-    left = "1" if is_wall(X + left_dx, Y + left_dy) else "0"
-    right = "1" if is_wall(X + right_dx, Y + right_dy) else "0"
-
-    screen = left + "8" + right
-
-    print("\n" * 3)
-    print("====================")
-    print("     MINI-DOOM")
-    print("====================")
-    print("Screen:", screen)
+    print("Screen:", get_screen_code())
     print("Position:", X, Y)
-    print("Direction:", ["NORTH", "EAST", "SOUTH", "WEST"][ROTATION])
+    print("Direction:", DIRECTION_NAMES[ROTATION])
+
+    print("\nMAP:")
+
+    for row in range(1, 4):
+        line = ""
+
+        for col in range(1, 4):
+            if X == col and Y == row:
+                line += "[" + ARROWS[ROTATION] + "]"
+            else:
+                line += " . "
+
+        print(line)
+
+    print("========================")
 
 
 def move(amount):
@@ -62,7 +97,8 @@ def move(amount):
     new_x = X + dx * amount
     new_y = Y + dy * amount
 
-    if not is_wall(new_x, new_y):
+    # Keep player inside the 3x3 grid
+    if 1 <= new_x <= 3 and 1 <= new_y <= 3:
         X = new_x
         Y = new_y
 
@@ -79,23 +115,26 @@ def main():
         print("D = Turn right")
         print("Q = Quit")
 
-        try:
-            command = input("\nCommand: ").lower().strip()
-        except (EOFError, OSError):
-            print("Input unavailable. Exiting MINI-DOOM.")
-            break
+        command = input("\nCommand: ").lower().strip()
 
         if command == "w":
             move(1)
+
         elif command == "s":
             move(-1)
+
         elif command == "a":
             ROTATION = (ROTATION - 1) % 4
+
         elif command == "d":
             ROTATION = (ROTATION + 1) % 4
+
         elif command == "q":
-            print("Exiting MINI-DOOM...")
+            print("Closing MINI-DOOM...")
             break
+
+        else:
+            print("Unknown command.")
 
 
 if __name__ == "__main__":
